@@ -1,0 +1,21 @@
+:root {
+  --bg: #0b0a09;
+  --s1: #131110;
+  --s2: #1c1916;
+  --s3: #27231f;
+  --line: #2b2723;
+  --ink: #efe9de;
+  --muted: #a59c8c;
+  --dim: #8a8273;
+  --brass: #d2b27a;
+  --brass-hi: #e3c791;
+  --brass-ink: #1a1408;
+
+  --font-display: 'Bodoni Moda', 'Didot', Georgia, serif;
+  --font-ui: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --rail: 400px;
+  --gutter: 20px;
+  --radius: 10px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
