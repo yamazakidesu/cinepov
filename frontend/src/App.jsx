@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
 import Rail from './components/Rail'
+import SeatPlan from './components/SeatPlan'
+import BookBar, { MAX } from './components/BookBar'
 
 export default function App() {
   const [movies, setMovies] = useState([])
@@ -8,9 +10,11 @@ export default function App() {
   const [detail, setDetail] = useState(null) // { movie, showtimes }
   const [showtimeId, setShowtimeId] = useState(null)
   const [hall, setHall] = useState(null)
+  const [seats, setSeats] = useState([])
+  const [selected, setSelected] = useState([]) // label kursi, urutan klik
+  const [full, setFull] = useState(false)
   const [error, setError] = useState('')
 
-  // 1) daftar film, sekali saat app dibuka
   useEffect(() => {
     api.movies()
       .then((list) => {
@@ -20,7 +24,6 @@ export default function App() {
       .catch((e) => setError(e.message))
   }, [])
 
-  // 2) detail film + jadwal tiap kali film berganti
   useEffect(() => {
     if (movieId == null) return
     api.movie(movieId)
@@ -31,13 +34,32 @@ export default function App() {
       .catch((e) => setError(e.message))
   }, [movieId])
 
-  // 3) data studio untuk jadwal terpilih
+  // data studio + semua kursi, tiap kali jadwal berganti
   useEffect(() => {
     if (showtimeId == null) return
-    api.showtime(showtimeId)
-      .then((d) => setHall(d.hall))
+    setSelected([])
+    setFull(false)
+    Promise.all([api.showtime(showtimeId), api.seats(showtimeId)])
+      .then(([st, sc]) => {
+        setHall(st.hall)
+        setSeats(sc.seats)
+      })
       .catch((e) => setError(e.message))
   }, [showtimeId])
+
+  function toggle(seat) {
+    setFull(false)
+    setSelected((cur) => {
+      if (cur.includes(seat.label)) return cur.filter((l) => l !== seat.label)
+      if (cur.length >= MAX) {
+        setFull(true)
+        return cur
+      }
+      return [...cur, seat.label]
+    })
+  }
+
+  const picked = selected.map((l) => seats.find((s) => s.label === l)).filter(Boolean)
 
   return (
     <div className="app">
@@ -51,13 +73,12 @@ export default function App() {
       />
       <main className="stage">
         {error ? (
-          <p className="status error">{error}. Pastikan backend jalan di port 5000.</p>
+          <p className="status error">{error}. Pastikan backend jalan.</p>
         ) : hall ? (
-          <p className="status">
-            {hall.name} · {hall.rows} baris × {hall.cols} kursi
-            <br />
-            Denah kursi menyusul di langkah berikutnya.
-          </p>
+          <>
+            <SeatPlan hall={hall} seats={seats} selected={selected} onToggle={toggle} />
+            <BookBar picked={picked} full={full} />
+          </>
         ) : (
           <p className="status">Memuat…</p>
         )}
