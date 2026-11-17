@@ -159,4 +159,23 @@
     border-color: var(--brass);
     box-shadow: none;
   }
+  /* ---------- day tab ---------- */
+.days {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+.day {
+  padding: 4px 0;
+  color: var(--dim);
+  font-size: 14px;
+}
+.day:hover {
+  color: var(--ink);
+}
+.day[aria-selected='true'] {
+  color: var(--ink);
+  box-shadow: inset 0 -1px 0 var(--brass);
+}
+
 }

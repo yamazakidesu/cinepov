@@ -1,12 +1,17 @@
+import { useState } from 'react'
 import { durasi, jam, labelHari } from '../lib/format'
 
 export default function Rail({ movies, movie, showtimes, showtimeId, onMovie, onShowtime }) {
-  // kelompokkan jadwal per tanggal
+  const [dayIdx, setDayIdx] = useState(0)
+
+  // kelompokkan jadwal per tanggal: [['2026-11-17', [jadwal...]], ...]
   const perHari = {}
   for (const s of showtimes) {
     const tgl = s.starts_at.slice(0, 10)
     ;(perHari[tgl] ||= []).push(s)
   }
+  const days = Object.entries(perHari)
+  const active = days[Math.min(dayIdx, days.length - 1)]
 
   return (
     <aside className="rail">
@@ -24,23 +29,31 @@ export default function Rail({ movies, movie, showtimes, showtimeId, onMovie, on
 
       <section>
         <h2 className="section-title">Jam tayang</h2>
-        {Object.entries(perHari).map(([tgl, list]) => (
-          <div key={tgl} style={{ marginBottom: 14 }}>
-            <p className="meta" style={{ margin: '0 0 8px' }}>{labelHari(tgl + 'T00:00')}</p>
-            <div className="chips">
-              {list.map((s) => (
-                <button
-                  key={s.id}
-                  className="chip"
-                  aria-pressed={s.id === showtimeId}
-                  onClick={() => onShowtime(s.id)}
-                >
-                  {jam(s.starts_at)}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
+        <div className="days" role="tablist">
+          {days.map(([tgl], i) => (
+            <button
+              key={tgl}
+              className="day"
+              role="tab"
+              aria-selected={active?.[0] === tgl}
+              onClick={() => setDayIdx(i)}
+            >
+              {labelHari(tgl + 'T00:00')}
+            </button>
+          ))}
+        </div>
+        <div className="chips">
+          {active?.[1].map((s) => (
+            <button
+              key={s.id}
+              className="chip"
+              aria-pressed={s.id === showtimeId}
+              onClick={() => onShowtime(s.id)}
+            >
+              {jam(s.starts_at)}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section>

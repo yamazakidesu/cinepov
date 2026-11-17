@@ -9,21 +9,23 @@ export default function BookBar({ picked, full }) {
 
   return (
     <div className="bar">
-      {focus ? (
-        <div className="bar-info">
-          <p className="bar-seat">
-            Kursi {focus.label}
-            <span> · {focus.kind === 'lounge' ? 'Lounge' : 'Standar'}</span>
-          </p>
-          <p className="bar-facts">
-            {focus.distance_m.toLocaleString('id-ID')} m dari layar · sudut pandang {focus.view_angle_deg}° · {focus.zone}
-          </p>
-        </div>
-      ) : (
-        <p className="bar-hint">Pilih kursi untuk melihat jarak dan sudut pandangnya.</p>
-      )}
+      <div className="bar-top">
+        {focus ? (
+          <div className="bar-info">
+            <p className="bar-seat">
+              Kursi {focus.label}
+              <span> · {focus.kind === 'lounge' ? 'Lounge' : 'Standar'}</span>
+            </p>
+            <p className="bar-facts">
+              {focus.distance_m.toLocaleString('id-ID')} m dari layar · sudut pandang {focus.view_angle_deg}° · {focus.zone}
+            </p>
+          </div>
+        ) : (
+          <p className="bar-hint">Pilih kursi untuk melihat jarak dan sudut pandangnya.</p>
+        )}
 
-      {full && <p className="bar-warn">Maksimal {MAX} kursi per pesanan.</p>}
+        {full && <p className="bar-warn">Maksimal {MAX} kursi per pesanan.</p>}
+      </div>
 
       <div className="bar-action">
         <div>
