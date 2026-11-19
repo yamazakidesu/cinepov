@@ -4,6 +4,7 @@ import Rail from './components/Rail'
 import SeatPlan from './components/SeatPlan'
 import BookBar, { MAX } from './components/BookBar'
 import PovLayer from './components/PovLayer'
+import CheckoutDialog from './components/CheckoutDialog'
 import { HallScene } from './lib/hall3d'
 import { jam } from './lib/format'
 
@@ -20,6 +21,7 @@ export default function App() {
   const [selected, setSelected] = useState([]) // label kursi, urutan klik
   const [full, setFull] = useState(false)
   const [error, setError] = useState('')
+  const [checkout, setCheckout] = useState(false) // dialog checkout terbuka
 
   // ---- transisi 2D <-> POV ----
   const [view, setView] = useState('map') // map | toPov | pov | toMap
@@ -97,11 +99,11 @@ export default function App() {
 
   // kunci scroll halaman selama bukan di denah (HP)
   useEffect(() => {
-    document.body.style.overflow = view === 'map' ? '' : 'hidden'
+    document.body.style.overflow = view === 'map' && !checkout ? '' : 'hidden'
     return () => {
       document.body.style.overflow = ''
     }
-  }, [view])
+  }, [view, checkout])
 
   const viewRef = useRef(view)
   const focusRef = useRef(focus)
@@ -109,6 +111,7 @@ export default function App() {
     viewRef.current = view
     focusRef.current = focus
   })
+  
 
   /* ---------- pose kamera ---------- */
   function poseFor(scene, label) {
@@ -207,6 +210,20 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
+    // dialog ditutup: kalau sudah berhasil atau ada konflik, segarkan status kursi dari server
+  function closeCheckout({ booked, conflict }) {
+    setCheckout(false)
+    if (!booked && !conflict) return
+    api.seats(showtimeId)
+      .then((sc) => {
+        setSeats(sc.seats)
+        if (booked) setSelected([])
+        else setSelected((cur) => cur.filter((l) => !sc.seats.find((s) => s.label === l)?.taken))
+      })
+      .catch((e) => setError(e.message))
+    if (viewRef.current === 'pov') goMap()
+  }
+
   /* ---------- tampilan ---------- */
   const picked = selected.map((l) => seats.find((s) => s.label === l)).filter(Boolean)
   const focusSeat = seats.find((s) => s.label === focus)
@@ -230,7 +247,7 @@ export default function App() {
         ) : hall ? (
           <>
             <SeatPlan hall={hall} seats={seats} selected={selected} onTap={onTap} />
-            <BookBar picked={picked} full={full} />
+            <BookBar picked={picked} full={full} onOrder={() => setCheckout(true)} />
           </>
         ) : (
           <p className="status">Memuat…</p>
@@ -246,7 +263,17 @@ export default function App() {
         total={total}
         count={picked.length}
         onBack={goMap}
+        onOrder={() => setCheckout(true)}
       />
+      {checkout && showtime && (
+        <CheckoutDialog
+          movie={detail?.movie}
+          hallName={hall?.name}
+          showtime={showtime}
+          picked={picked}
+          onClose={closeCheckout}
+        />
+      )}
     </div>
   )
 }

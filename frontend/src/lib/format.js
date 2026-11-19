@@ -15,3 +15,8 @@ export function labelHari(iso) {
 }
 
 export const durasi = (min) => `${Math.floor(min / 60)}j ${min % 60}m`
+
+
+const tglPanjang = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+export const tanggalPanjang = (iso) => tglPanjang.format(new Date(iso.slice(0, 10) + 'T00:00'))

@@ -2,7 +2,7 @@ import { rupiah } from '../lib/format'
 
 const d1 = (n) => n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-export default function PovLayer({ seat, movie, hallName, time, total, count, onBack }) {
+export default function PovLayer({ seat, movie, hallName, time, total, count, onBack, onOrder }) {
   if (!seat) return null
   const off = Math.abs(seat.offset_m)
   return (
@@ -49,7 +49,7 @@ export default function PovLayer({ seat, movie, hallName, time, total, count, on
         </dl>
 
         <div className="sheet-actions">
-          <button className="btn" disabled>
+          <button className="btn" onClick={onOrder}>
             Pesan · {rupiah(total)}
           </button>
           <button className="link" onClick={onBack}>
