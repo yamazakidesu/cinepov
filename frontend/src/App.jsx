@@ -5,6 +5,7 @@ import SeatPlan from './components/SeatPlan'
 import BookBar, { MAX } from './components/BookBar'
 import PovLayer from './components/PovLayer'
 import CheckoutDialog from './components/CheckoutDialog'
+import LookupDialog from './components/LookupDialog'
 import { HallScene } from './lib/hall3d'
 import { jam } from './lib/format'
 
@@ -19,9 +20,11 @@ export default function App() {
   const [hall, setHall] = useState(null)
   const [seats, setSeats] = useState([])
   const [selected, setSelected] = useState([]) // label kursi, urutan klik
-  const [full, setFull] = useState(false)
+  const [notice, setNotice] = useState('') // pesan singkat di atas bar pesan
   const [error, setError] = useState('')
-  const [checkout, setCheckout] = useState(false) // dialog checkout terbuka
+  const [tries, setTries] = useState(0) // dinaikkan oleh tombol "Coba lagi"
+  const [checkout, setCheckout] = useState(false)
+  const [lookup, setLookup] = useState(false)
 
   // ---- transisi 2D <-> POV ----
   const [view, setView] = useState('map') // map | toPov | pov | toMap
@@ -31,38 +34,105 @@ export default function App() {
   const sceneRef = useRef(null)
   const timers = useRef([])
   const busy = useRef(false)
+  const selectedRef = useRef([])
 
   /* ---------- data ---------- */
+  // Tiap efek memakai penanda "cancelled": kalau user keburu pindah film/jadwal,
+  // jawaban lama dari server dibuang supaya tidak menimpa data yang baru.
+  function retry() {
+    setError('')
+    setTries((t) => t + 1)
+  }
+
   useEffect(() => {
+    let cancelled = false
     api.movies()
       .then((list) => {
+        if (cancelled) return
         setMovies(list)
-        setMovieId(list[0]?.id ?? null)
+        setMovieId((id) => id ?? list[0]?.id ?? null)
       })
-      .catch((e) => setError(e.message))
-  }, [])
+      .catch((e) => !cancelled && setError(e.message))
+    return () => {
+      cancelled = true
+    }
+  }, [tries])
 
   useEffect(() => {
     if (movieId == null) return
+    let cancelled = false
     api.movie(movieId)
       .then((d) => {
+        if (cancelled) return
         setDetail(d)
-        setShowtimeId(d.showtimes[0]?.id ?? null)
+        const first = d.showtimes[0]?.id ?? null
+        setShowtimeId(first)
+        if (first == null) {
+          setHall(null) // film tanpa jadwal: jangan tampilkan denah film sebelumnya
+          setSeats([])
+          setSelected([])
+        }
       })
-      .catch((e) => setError(e.message))
-  }, [movieId])
+      .catch((e) => !cancelled && setError(e.message))
+    return () => {
+      cancelled = true
+    }
+  }, [movieId, tries])
 
   useEffect(() => {
     if (showtimeId == null) return
+    let cancelled = false
     setSelected([])
-    setFull(false)
+    setNotice('')
+    setHall(null) // tampilkan "Memuat denah" selama data jadwal baru diambil
     Promise.all([api.showtime(showtimeId), api.seats(showtimeId)])
       .then(([st, sc]) => {
+        if (cancelled) return
         setHall(st.hall)
         setSeats(sc.seats)
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => !cancelled && setError(e.message))
+    return () => {
+      cancelled = true
+    }
+  }, [showtimeId, tries])
+
+  // judul tab browser mengikuti film
+  useEffect(() => {
+    document.title = detail?.movie ? `${detail.movie.title} · CinePOV` : 'CinePOV'
+  }, [detail])
+
+  // Ambil ulang status kursi dari server (dipakai juga setelah memesan).
+  // Kursi pilihan yang ternyata sudah diambil orang lain dilepas, user diberi tahu.
+  const refreshSeats = useCallback(async () => {
+    if (showtimeId == null) return
+    try {
+      const sc = await api.seats(showtimeId)
+      setSeats(sc.seats)
+      const cur = selectedRef.current
+      const keep = cur.filter((l) => !sc.seats.find((s) => s.label === l)?.taken)
+      if (keep.length !== cur.length) {
+        setSelected(keep)
+        setNotice('Ada kursi pilihanmu yang baru saja dipesan orang lain.')
+      }
+    } catch {
+      /* gagal diam-diam: data lama tetap tampil */
+    }
   }, [showtimeId])
+
+  // Selama denah terbuka, segarkan tiap 20 detik dan saat tab kembali dilihat.
+  useEffect(() => {
+    if (checkout || lookup || !hall) return
+    function tick() {
+      if (document.visibilityState === 'visible' && viewRef.current === 'map' && !busy.current) refreshSeats()
+    }
+    const id = setInterval(tick, 20000)
+    document.addEventListener('visibilitychange', tick)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', tick)
+    }
+  }, [refreshSeats, checkout, lookup, hall])
 
   /* ---------- scene 3D ---------- */
   useEffect(() => {
@@ -85,25 +155,28 @@ export default function App() {
     }
   }, [])
 
+  // 3D dibangun ulang hanya saat studio atau film berganti, bukan tiap status kursi diperbarui
   useEffect(() => {
     if (hall && seats.length && sceneRef.current) {
       const still = (detail?.movie?.id ?? 1) - 1
       sceneRef.current.resize()
       sceneRef.current.setHall(hall, seats, still)
     }
-  }, [hall, seats, detail])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hall, detail?.movie?.id])
 
   useEffect(() => {
+    selectedRef.current = selected
     sceneRef.current?.setSelected(selected)
   }, [selected])
 
   // kunci scroll halaman selama bukan di denah (HP)
   useEffect(() => {
-    document.body.style.overflow = view === 'map' && !checkout ? '' : 'hidden'
+    document.body.style.overflow = view === 'map' && !checkout && !lookup ? '' : 'hidden'
     return () => {
       document.body.style.overflow = ''
     }
-  }, [view, checkout])
+  }, [view, checkout, lookup])
 
   const viewRef = useRef(view)
   const focusRef = useRef(focus)
@@ -111,7 +184,6 @@ export default function App() {
     viewRef.current = view
     focusRef.current = focus
   })
-  
 
   /* ---------- pose kamera ---------- */
   function poseFor(scene, label) {
@@ -185,13 +257,13 @@ export default function App() {
   const onTap = useCallback(
     (seat) => {
       if (busy.current || view !== 'map' || seat.taken) return
-      setFull(false)
+      setNotice('')
       if (selected.includes(seat.label)) {
         setSelected(selected.filter((l) => l !== seat.label)) // klik lagi = batal
         return
       }
       if (selected.length >= MAX) {
-        setFull(true)
+        setNotice(`Maksimal ${MAX} kursi per pesanan.`)
         return
       }
       const next = [...selected, seat.label]
@@ -210,18 +282,21 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-    // dialog ditutup: kalau sudah berhasil atau ada konflik, segarkan status kursi dari server
+  // dialog ditutup: kalau sudah berhasil atau ada konflik, segarkan status kursi dari server
   function closeCheckout({ booked, conflict }) {
     setCheckout(false)
     if (!booked && !conflict) return
-    api.seats(showtimeId)
-      .then((sc) => {
-        setSeats(sc.seats)
-        if (booked) setSelected([])
-        else setSelected((cur) => cur.filter((l) => !sc.seats.find((s) => s.label === l)?.taken))
-      })
-      .catch((e) => setError(e.message))
+    if (booked) {
+      selectedRef.current = [] // kursi yang baru dipesan bukan "pilihan yang diambil orang lain"
+      setSelected([])
+    }
+    refreshSeats()
     if (viewRef.current === 'pov') goMap()
+  }
+
+  // Rail tetap tampak di desktop saat POV: abaikan ganti film/jadwal selama bukan di denah
+  const onlyOnMap = (fn) => (arg) => {
+    if (viewRef.current === 'map' && !busy.current) fn(arg)
   }
 
   /* ---------- tampilan ---------- */
@@ -238,19 +313,25 @@ export default function App() {
         movie={detail?.movie}
         showtimes={detail?.showtimes ?? []}
         showtimeId={showtimeId}
-        onMovie={setMovieId}
-        onShowtime={setShowtimeId}
+        onMovie={onlyOnMap(setMovieId)}
+        onShowtime={onlyOnMap(setShowtimeId)}
+        onLookup={() => setLookup(true)}
       />
       <main className="stage">
         {error ? (
-          <p className="status error">{error}. Pastikan backend jalan.</p>
+          <div className="status-box">
+            <p className="status error">{error}.</p>
+            <button className="btn" onClick={retry}>Coba lagi</button>
+          </div>
+        ) : detail && showtimeId == null ? (
+          <p className="status status-box">Belum ada jadwal tayang untuk film ini.</p>
         ) : hall ? (
           <>
             <SeatPlan hall={hall} seats={seats} selected={selected} onTap={onTap} />
-            <BookBar picked={picked} full={full} onOrder={() => setCheckout(true)} />
+            <BookBar picked={picked} notice={notice} onOrder={() => setCheckout(true)} />
           </>
         ) : (
-          <p className="status">Memuat…</p>
+          <p className="status status-box pulse" aria-busy="true">Memuat denah…</p>
         )}
       </main>
 
@@ -274,6 +355,7 @@ export default function App() {
           onClose={closeCheckout}
         />
       )}
+      {lookup && <LookupDialog onClose={() => setLookup(false)} />}
     </div>
   )
 }

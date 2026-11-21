@@ -179,3 +179,31 @@
 }
 
 }
+
+/* ---------- baris merek + cek tiket ---------- */
+.brand-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---------- status: memuat, kosong, gagal ---------- */
+.status-box {
+  margin: auto;
+  max-width: 340px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.status-box .btn {
+  padding: 10px 24px;
+}
+.pulse {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% { opacity: 0.4; }
+}

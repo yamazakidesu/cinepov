@@ -2,7 +2,7 @@ import { rupiah } from '../lib/format'
 
 const MAX = 6
 
-export default function BookBar({ picked, full, onOrder }) {
+export default function BookBar({ picked, notice, onOrder }) {
   // picked: kursi terpilih (objek lengkap dari API), kursi terakhir = yang sedang disorot
   const focus = picked[picked.length - 1]
   const total = picked.reduce((sum, s) => sum + s.price, 0)
@@ -24,7 +24,7 @@ export default function BookBar({ picked, full, onOrder }) {
           <p className="bar-hint">Pilih kursi untuk melihat jarak dan sudut pandangnya.</p>
         )}
 
-        {full && <p className="bar-warn">Maksimal {MAX} kursi per pesanan.</p>}
+        {notice && <p className="bar-warn" role="status">{notice}</p>}
       </div>
 
       <div className="bar-action">
@@ -32,9 +32,7 @@ export default function BookBar({ picked, full, onOrder }) {
           <p className="bar-count">{picked.length ? `${picked.length} kursi` : 'Belum ada kursi'}</p>
           <p className="bar-total">{rupiah(total)}</p>
         </div>
-        <button className="btn" disabled={!picked.length} onClick={onOrder}>
-          Pesan
-        </button>
+        <button className="btn" disabled={!picked.length} onClick={onOrder}>Pesan</button>
       </div>
     </div>
   )

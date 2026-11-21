@@ -1,5 +1,12 @@
+// Satu pintu untuk semua request ke backend.
 async function request(path, options) {
-  const res = await fetch(path, options)
+  let res
+  try {
+    res = await fetch(path, options)
+  } catch {
+    // server mati / tidak terjangkau
+    throw new Error('Tidak bisa terhubung ke server')
+  }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || `Request gagal (${res.status})`)
   return data
@@ -16,5 +23,5 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }),
-  ticket: (code) => request(`/api/bookings/${code}`),
+  ticket: (code) => request(`/api/bookings/${encodeURIComponent(code)}`),
 }

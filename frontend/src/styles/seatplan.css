@@ -173,9 +173,20 @@
   color: var(--muted);
   font-size: 14px;
 }
+/* pemberitahuan melayang di atas bar supaya tidak menggeser layout */
 .bar-warn {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  background: var(--s3);
   color: var(--brass-hi);
   font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-align: center;
 }
 
 .bar-action {
