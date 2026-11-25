@@ -1,4 +1,5 @@
 export const rupiah = (n) => 'Rp' + n.toLocaleString('id-ID')
+export const rupiahBulat = (n) => rupiah(Math.round(n))
 
 export const jam = (iso) => iso.slice(11, 16)
 

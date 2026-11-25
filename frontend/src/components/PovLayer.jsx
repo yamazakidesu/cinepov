@@ -1,8 +1,12 @@
-import { rupiah } from '../lib/format'
+import { rupiahBulat } from '../lib/format'
+import Num from './Num'
 
 const d1 = (n) => n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const fJarak = d1
+const fSudut = (n) => String(Math.round(n))
+const fOffset = (n) => (n < 0.05 ? '0' : d1(n))
 
-export default function PovLayer({ seat, movie, hallName, time, total, count, onBack, onOrder }) {
+export default function PovLayer({ seat, movie, hallName, time, total, count, up, onBack, onOrder }) {
   if (!seat) return null
   const off = Math.abs(seat.offset_m)
   return (
@@ -36,21 +40,21 @@ export default function PovLayer({ seat, movie, hallName, time, total, count, on
         <dl className="stats">
           <div>
             <dt>Jarak ke layar</dt>
-            <dd>{d1(seat.distance_m)}<small>m</small></dd>
+            <dd><Num value={seat.distance_m} format={fJarak} play={up} /><small>m</small></dd>
           </div>
           <div>
             <dt>Sudut pandang</dt>
-            <dd>{seat.view_angle_deg}<small>°</small></dd>
+            <dd><Num value={seat.view_angle_deg} format={fSudut} play={up} /><small>°</small></dd>
           </div>
           <div>
             <dt>{off < 0.05 ? 'Tepat di tengah' : `${seat.offset_m < 0 ? 'Kiri' : 'Kanan'} dari tengah`}</dt>
-            <dd>{off < 0.05 ? '0' : d1(off)}<small>m</small></dd>
+            <dd><Num value={off} format={fOffset} play={up} /><small>m</small></dd>
           </div>
         </dl>
 
         <div className="sheet-actions">
           <button className="btn" onClick={onOrder}>
-            Pesan · {rupiah(total)}
+           Pesan · <Num value={total} format={rupiahBulat} play={up} duration={0.5} />
           </button>
           <button className="link" onClick={onBack}>
             {count > 1 ? `${count} kursi dipilih · pilih lagi` : 'Pilih kursi lain'}

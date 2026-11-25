@@ -1,4 +1,5 @@
-import { rupiah } from '../lib/format'
+import { rupiahBulat } from '../lib/format'
+import Num from './Num'
 
 const MAX = 6
 
@@ -30,7 +31,7 @@ export default function BookBar({ picked, notice, onOrder }) {
       <div className="bar-action">
         <div>
           <p className="bar-count">{picked.length ? `${picked.length} kursi` : 'Belum ada kursi'}</p>
-          <p className="bar-total">{rupiah(total)}</p>
+          <p className="bar-total"><Num value={total} format={rupiahBulat} duration={0.45} /></p>
         </div>
         <button className="btn" disabled={!picked.length} onClick={onOrder}>Pesan</button>
       </div>

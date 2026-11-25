@@ -343,6 +343,7 @@ export default function App() {
         time={showtime ? jam(showtime.starts_at) : ''}
         total={total}
         count={picked.length}
+        up={!!fx.sheetUp}
         onBack={goMap}
         onOrder={() => setCheckout(true)}
       />
