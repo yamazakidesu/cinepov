@@ -84,15 +84,26 @@
 }
 
 .chip {
+  position: relative;
   padding: 8px 14px;
   border-radius: 999px;
   background: var(--s2);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.25s;
 }
-.chip:hover {
-  background: var(--s3);
+.chip[aria-pressed='true'] {
+  color: var(--brass-ink);
+}
+.chip-label {
+  position: relative; /* di atas pil kuningan */
+}
+.ind-chip {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--brass);
+  pointer-events: none;
 }
 .chip[aria-pressed='true'] {
   background: var(--brass);
@@ -104,6 +115,7 @@
   flex-direction: column;
 }
 .film-row {
+  position: relative;
   text-align: left;
   padding: 12px 0;
   border-bottom: 1px solid var(--line);
@@ -114,7 +126,19 @@
 }
 .film-row[aria-current='true'] {
   color: var(--ink);
-  box-shadow: inset 0 -2px 0 var(--brass);
+}
+.film-name,
+.film-row small {
+  position: relative;
+}
+.ind-film {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--brass);
+  pointer-events: none;
 }
 .film-row small {
   color: var(--dim);
@@ -155,10 +179,17 @@
     display: none;
   }
   .film-row[aria-current='true'] {
-    background: var(--s3);
-    border-color: var(--brass);
-    box-shadow: none;
+  border-color: transparent;
   }
+  .ind-film {
+    inset: -1px;
+    height: auto;
+    border: 1px solid var(--brass);
+    border-radius: 999px;
+    background: var(--s3);
+    z-index: 0;
+  }
+}
   /* ---------- day tab ---------- */
 .days {
   display: flex;
@@ -166,6 +197,7 @@
   margin-bottom: 12px;
 }
 .day {
+  position: relative;
   padding: 4px 0;
   color: var(--dim);
   font-size: 14px;
@@ -175,7 +207,15 @@
 }
 .day[aria-selected='true'] {
   color: var(--ink);
-  box-shadow: inset 0 -1px 0 var(--brass);
+}
+.ind-day {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--brass);
+  pointer-events: none;
 }
 
 }

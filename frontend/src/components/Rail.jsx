@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { motion } from 'motion/react'
+import { spring } from '../lib/motion'
 import { durasi, jam, labelHari } from '../lib/format'
 
 export default function Rail({ movies, movie, showtimes, showtimeId, onMovie, onShowtime, onLookup }) {
@@ -43,6 +45,9 @@ export default function Rail({ movies, movie, showtimes, showtimeId, onMovie, on
                 onClick={() => setDayIdx(i)}
               >
                 {labelHari(tgl + 'T00:00')}
+                 {active?.[0] === tgl && (
+                  <motion.span layoutId="day-line" className="ind-day" transition={spring} />
+                )}
               </button>
             ))}
           </div>
@@ -54,7 +59,10 @@ export default function Rail({ movies, movie, showtimes, showtimeId, onMovie, on
                 aria-pressed={s.id === showtimeId}
                 onClick={() => onShowtime(s.id)}
               >
-                {jam(s.starts_at)}
+                {s.id === showtimeId && (
+                  <motion.span layoutId="chip-pill" className="ind-chip" transition={spring} />
+                )}
+                <span className="chip-label">{jam(s.starts_at)}</span>
               </button>
             ))}
           </div>
@@ -72,7 +80,10 @@ export default function Rail({ movies, movie, showtimes, showtimeId, onMovie, on
                 aria-current={movie?.id === m.id}
                 onClick={() => onMovie(m.id)}
               >
-                <span>{m.title}</span>
+                {movie?.id === m.id && (
+                  <motion.span layoutId="film-mark" className="ind-film" transition={spring} />
+                )}
+                <span className="film-name">{m.title}</span>
                 <small>{m.genre}</small>
               </button>
             ))}
