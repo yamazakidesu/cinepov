@@ -52,6 +52,16 @@
   height: var(--rh);
   flex: none;
   position: relative;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.seat:active:not(:disabled) {
+  transform: scale(0.86);
+  transition-duration: 0.08s;
+}
+@keyframes seat-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.16); }
+  100% { transform: scale(1); }
 }
 /* sandaran dan dudukan, digambar dengan dua blok */
 .seat::before {
@@ -99,6 +109,7 @@
 }
 .seat[aria-pressed='true'] {
   --tone: var(--brass);
+  animation: seat-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .seat:focus-visible {
   outline: 2px solid var(--brass-hi);
@@ -161,6 +172,54 @@
 .bar-seat {
   font-family: var(--font-display);
   font-size: 22px;
+}
+.bar-left {
+  min-width: 0;
+}
+.bar-picked {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+.picked-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  position: relative; /* dibutuhkan AnimatePresence popLayout */
+  max-width: 100%;
+  overflow-x: auto; /* cadangan kalau layar sangat sempit */
+  scrollbar-width: none;
+}
+.picked-list li {
+  flex: none;
+}
+.pick {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--s3);
+  color: var(--brass-hi);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.pick:hover {
+  background: var(--line);
+}
+@media (max-width: 420px) {
+  .picked-list {
+    gap: 3px;
+  }
+  .pick {
+    padding: 3px 7px;
+    font-size: 12px;
+  }
+  .bar-action .btn {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
 }
 .bar-seat span {
   font-family: var(--font-ui);

@@ -328,7 +328,7 @@ export default function App() {
         ) : hall ? (
           <>
             <SeatPlan hall={hall} seats={seats} selected={selected} onTap={onTap} />
-            <BookBar picked={picked} notice={notice} onOrder={() => setCheckout(true)} />
+            <BookBar picked={picked} notice={notice} onOrder={() => setCheckout(true)} onRemove={onTap} />
           </>
         ) : (
           <p className="status status-box pulse" aria-busy="true">Memuat denah…</p>
